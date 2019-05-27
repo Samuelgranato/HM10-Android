@@ -8,6 +8,10 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import org.w3c.dom.Text;
 
 import java.util.UUID;
 
@@ -25,6 +29,9 @@ public class HM10TerminalActivity extends Activity {
     private UUID hm10UartUUID = UUID.fromString("0000ffe0-0000-1000-8000-00805f9b34fb");
     private UUID hm10UartWriteUUID = UUID.fromString("0000ffe1-0000-1000-8000-00805f9b34fb");
 
+    int credits;
+    TextView creditsTxt;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         final BluetoothManager bluetoothManager = (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
@@ -34,16 +41,56 @@ public class HM10TerminalActivity extends Activity {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_hm10terminal);
-        final Button button = (Button) findViewById(R.id.button);
-        button.setOnClickListener(new View.OnClickListener() {
+
+        final Button buyCreditsButton= (Button) findViewById(R.id.buyCreditsButton);
+        final Button autorizeButton = (Button) findViewById(R.id.autorizeButton);
+
+        creditsTxt = (TextView) findViewById(R.id.creditosTxt_change);
+
+        credits = 0;
+
+
+        autorizeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(connected) {
-                    BluetoothGattCharacteristic ch = mBluetoothGatt.getService(hm10UartUUID).getCharacteristic(hm10UartWriteUUID);
-                    final EditText editText = (EditText) findViewById(R.id.editText2);
+                    if(credits > 0) {
+                        BluetoothGattCharacteristic ch = mBluetoothGatt.getService(hm10UartUUID).getCharacteristic(hm10UartWriteUUID);
+//                    final EditText editText = (EditText) findViewById(R.id.editText2);
 
-                    ch.setValue(editText.getText().toString());
-                    Log.i(TAG, "Enviando input.");
+//                    ch.setValue(editText.getText().toString());
+                        ch.setValue("2");
+
+
+
+                        Log.i(TAG, "Autorizando jogada");
+                        Toast.makeText(HM10TerminalActivity.this, "Solicitando autorização!", Toast.LENGTH_SHORT).show();
+
+                        mBluetoothGatt.writeCharacteristic(ch);
+                    }else{
+                        Log.i(TAG, "Créditos Insuficientes");
+                        Toast.makeText(HM10TerminalActivity.this, "Créditos Insuficientes!", Toast.LENGTH_SHORT).show();
+
+                    }
+                }
+            }
+        });
+
+        buyCreditsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(connected) {
+//                    credits+=1;
+//                    updateCredits();
+                    BluetoothGattCharacteristic ch = mBluetoothGatt.getService(hm10UartUUID).getCharacteristic(hm10UartWriteUUID);
+//                    final EditText editText = (EditText) findViewById(R.id.editText2);
+
+//                    ch.setValue(editText.getText().toString());
+                    ch.setValue("1");
+
+                    Log.i(TAG, "Solicitação de compra de créditos");
+                    Toast.makeText(HM10TerminalActivity.this, "Solicitando compra de créditos!", Toast.LENGTH_SHORT).show();
+
                     mBluetoothGatt.writeCharacteristic(ch);
                 }
             }
@@ -60,6 +107,10 @@ public class HM10TerminalActivity extends Activity {
     protected void onPause() {
         mBluetoothGatt.disconnect();
         super.onPause();
+    }
+
+    void updateCredits(){
+        creditsTxt.setText(String.valueOf(credits));
     }
 
     private final BluetoothGattCallback mBluetoothGattCallback = new BluetoothGattCallback() {
@@ -110,14 +161,34 @@ public class HM10TerminalActivity extends Activity {
         @Override
         public void onCharacteristicChanged(BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
 
-                Log.i(TAG, String.format("Recebi : %s", characteristic.getStringValue(0)));
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        EditText terminal = (EditText) findViewById(R.id.editText1);
-                        terminal.setText(terminal.getText() + "\n" +  characteristic.getStringValue(0));
+            Log.i(TAG, String.format("Recebi : %s", characteristic.getStringValue(0)));
+            runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+//                        EditText terminal = (EditText) findViewById(R.id.editText1);
+//                        terminal.setText(terminal.getText() + "\n" +  characteristic.getStringValue(0));
+
+//                    credits -= 1;
+//                    updateCredits();
+
+
+//                    Toast.makeText(HM10TerminalActivity.this, characteristic.getStringValue(0), Toast.LENGTH_SHORT).show();
+                    if(characteristic.getStringValue(0).contains("3")){
+                        credits +=1;
+                        updateCredits();
+
+                        Toast.makeText(HM10TerminalActivity.this, "Créditos Comprados com sucesso!", Toast.LENGTH_SHORT).show();
+
                     }
-                });
+                    if(characteristic.getStringValue(0).contains("4")){
+                        credits -=1;
+                        updateCredits();
+
+                        Toast.makeText(HM10TerminalActivity.this, "Jogada liberada!", Toast.LENGTH_SHORT).show();
+
+                    }
+                }
+            });
 
 
 
