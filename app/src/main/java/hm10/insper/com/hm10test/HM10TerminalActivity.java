@@ -59,10 +59,9 @@ public class HM10TerminalActivity extends Activity {
 //                    final EditText editText = (EditText) findViewById(R.id.editText2);
 
 //                    ch.setValue(editText.getText().toString());
-                        ch.setValue("autorizada");
+                        ch.setValue("2");
 
-                        credits -= 1;
-                        updateCredits();
+
 
                         Log.i(TAG, "Autorizando jogada");
                         Toast.makeText(HM10TerminalActivity.this, "Solicitando autorização!", Toast.LENGTH_SHORT).show();
@@ -81,11 +80,13 @@ public class HM10TerminalActivity extends Activity {
             @Override
             public void onClick(View view) {
                 if(connected) {
+//                    credits+=1;
+//                    updateCredits();
                     BluetoothGattCharacteristic ch = mBluetoothGatt.getService(hm10UartUUID).getCharacteristic(hm10UartWriteUUID);
 //                    final EditText editText = (EditText) findViewById(R.id.editText2);
 
 //                    ch.setValue(editText.getText().toString());
-                    ch.setValue("compra");
+                    ch.setValue("1");
 
                     Log.i(TAG, "Solicitação de compra de créditos");
                     Toast.makeText(HM10TerminalActivity.this, "Solicitando compra de créditos!", Toast.LENGTH_SHORT).show();
@@ -167,11 +168,23 @@ public class HM10TerminalActivity extends Activity {
 //                        EditText terminal = (EditText) findViewById(R.id.editText1);
 //                        terminal.setText(terminal.getText() + "\n" +  characteristic.getStringValue(0));
 
-                    if(characteristic.getStringValue(0).equals("fichaok")){
+//                    credits -= 1;
+//                    updateCredits();
+
+
+//                    Toast.makeText(HM10TerminalActivity.this, characteristic.getStringValue(0), Toast.LENGTH_SHORT).show();
+                    if(characteristic.getStringValue(0).contains("3")){
                         credits +=1;
                         updateCredits();
 
                         Toast.makeText(HM10TerminalActivity.this, "Créditos Comprados com sucesso!", Toast.LENGTH_SHORT).show();
+
+                    }
+                    if(characteristic.getStringValue(0).contains("4")){
+                        credits -=1;
+                        updateCredits();
+
+                        Toast.makeText(HM10TerminalActivity.this, "Jogada liberada!", Toast.LENGTH_SHORT).show();
 
                     }
                 }
